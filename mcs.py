@@ -28,11 +28,21 @@ def getdomains(version,hname):
     return mcs_getdomains(version,hname)
 
 
-@app.route("/mcs/api/<string:version>/hosts/<string:hname>/domains/<string:domname>")
+@app.route("/mcs/api/<string:version>/hosts/<string:hname>/domains/<string:domname>",methods=['GET'])
 def getdomain(version,hname,domname):
     return mcs_getdomain(version,hname,domname)
 
+@app.route("/mcs/api/<string:version>/hosts/<string:hname>/domains/<string:domname>",methods=['POST'])
+def createdomain(version,hname,domname):
+    if not request.json:
+        abort(400)
+    new_domain = mcs_createdomain(version,hname,domname,request.json)
+    if new_domain:
+        return new_domain
+    else:
+        abort(400)
 
+# 404 handler
 @app.errorhandler(404)
 def not_found(error):
     return make_response(jsonify({'error': 'Not found'}),404)

@@ -2,4 +2,4 @@
 curl -i http://192.168.56.101:5000/mcs/api/v1.1/hosts
 curl -i http://192.168.56.101:5000/mcs/api/v1.1/hosts/myxen
 curl -i http://192.168.56.101:5000/mcs/api/v1.1/hosts/myxen/domains
-curl -i -H "Content-Type: application/json" http://192.168.56.101:5000/mcs/api/v1.1/hosts/myxen/domains/ubun5 -X POST -d @newdomain.post
+curl -i -H "Content-Type: application/json" http://192.168.56.101:5000/mcs/api/v1.1/hosts/myxen/domains/ubun6 -X POST -d @newdomain.post

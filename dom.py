@@ -37,7 +37,13 @@ class domain():
             return False
         return dElt.xpath('/domain/devices/interface/mac')[0].attrib['address']
 
-    def __init__(self,domxmlspec):
+    def updatestate(self):
+        states = { 0: 'shutdown', 1: 'running' }
+        self.state = states[self.dom.isActive()]
+
+    def __init__(self,dom):
+        self.dom    = dom
+        domxmlspec = self.dom.XMLDesc()
         dElt = etree.fromstring(domxmlspec)
         self.name =     self.__getdom_name(dElt)
         self.type =     self.__getdom_type(dElt)
@@ -47,11 +53,13 @@ class domain():
         self.vcpu =     self.__getdom_vcpu(dElt)
         self.disks  =   self.__getdom_disks(dElt)
         self.mac  =     self.__getdom_mac(dElt)
+        self.updatestate()
 
     def __repr__(self):
         "Return domain info as string"
         details = {
                 'name': self.name,
+                'state': self.state,
                 'type': self.type,
                 'ostype': self.ostype,
                 'uuid': self.uuid,
@@ -66,6 +74,7 @@ class domain():
         "Return domain info as hash"
         details = {
                 'name': self.name,
+                'state': self.state,
                 'type': self.type,
                 'ostype': self.ostype,
                 'uuid': self.uuid,

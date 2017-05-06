@@ -53,15 +53,14 @@ def mcs_gethosts(version,hosts):
 def mcs_gethost(version,hname):
     "Return host info"
     if hname in xen_hosts:
-        return jsonp({hname: xen_hosts[hname]})
+        return jsonp({hname: xen_hosts[hname]['sysinfo']})
     else:
-        return jsonp({ hname: 'Not found' })
-
+        return jsonp({ 'error': hname + ' not found' })
 
 def mcs_getdomains(version,hname):
     "Return all domains on host hname"
     if hname not in xen_hosts:
-        return jsonp({ hname: 'Not found' })
+        return jsonp({ 'error': hname + ' not found' })
     else:
         domains = populate_domains(hname)
         return jsonp({ hname: domains })
@@ -69,34 +68,50 @@ def mcs_getdomains(version,hname):
 def mcs_getdomain(version,hname,domname):
     "Return domain info on host hname"
     if hname not in xen_hosts:
-        return jsonp({ hname: 'Not found' })
+        return jsonp({ 'error': hname + ' not found' })
     else:
         if domname not in xen_hosts[hname]['dominfo']:
-            return jsonp({ domname: 'Not found on ' + hname })
+            return jsonp({ 'error': domname + ' not found on ' + hname })
         else:
+            update_domain_info(hname,domname)     # update current state of domname on hname
             return jsonp({ hname: xen_hosts[hname]['dominfo'][domname] })
+
+
+def update_domain_info(hname,domname):
+    "Update domname state/info on host hanme"
+    conn = host_conn_hash[hname]
+    dom = conn.lookupByName(domname)
+    domobj = domain(dom)
+    xen_hosts[hname]['dominfo'][domobj.name] = domobj.info()
 
 def populate_domains(hname):
     "Populate domains in xen_hosts[hname] and return domain names"
     conn = host_conn_hash[hname]
     doms = conn.listAllDomains()
-    xen_hosts[hname]['domains'] = doms
-    # initialize 'dominfo'
+    # initialize 'dominfo' - domname,info
     xen_hosts[hname]['dominfo'] = {}
     for dom in doms:
-        domobj = domain(dom.XMLDesc())
+        domobj = domain(dom)
         xen_hosts[hname]['dominfo'][domobj.name] = domobj.info()
     return xen_hosts[hname]['dominfo'].keys()
        
-
-def mcs_createdomain(version,hname,domname,domjson):
+def mcs_createdomain(version,hname,domjson):
     "Create a domain, if not already present"
-    if __is_dom_inuse(hname,domjson['name']):
-        return False
+    domname = domjson['name']
+    if __is_dom_inuse(hname,domname):
+        return jsonp({ 'error': domname + ' already defined on ' + hname })
     newdomxml = createdomxml(domjson)
-    conn = host_conn_hash[hname]
-    conn.defineXML(newdomxml)
+    conn = host_conn_hash[hname]        # look up host connection
+    conn.defineXML(newdomxml)           # define new domain,but do not start it
+    update_domain_info(hname,domname)   # update current state of domname on hname
     return newdomxml
+
+def mcs_updatedomain(version,hname,domname,command):
+    "Update domain with given cmd, args"
+    if __is_dom_inuse(hname,domname):
+        return jsonp({ 'Command': command })
+    else:
+        return jsonp({ 'error': domname + ' not found on '  + hname })
 
 
 def jsonp(s):

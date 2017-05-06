@@ -158,7 +158,6 @@ def __is_dom_inuse(hname,domname):
     else:
         return False
 
-
 def getnextmac():
     "Generate random macs in range 00:16:3e:xx:xx:xx - used by Xen"
     nextmac = '00:16:3e:00:' + hex(ri(0,256)).strip('0x') + ':' + hex(ri(0,256)).strip('0x')

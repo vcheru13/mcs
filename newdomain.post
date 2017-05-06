@@ -1,7 +1,7 @@
 {
-    "memoryMB": 1024,
-    "name": "ubun4",
+    "memoryMB": 512,
+    "name": "ubun5",
     "osdiskGB": 16,
     "osimage": "ubuntu-1604",
-    "vcpu": 2
+    "vcpu": 1
 }

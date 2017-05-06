@@ -25,8 +25,17 @@ class domain():
     def __getdom_vcpu(self,dElt):
         return dElt.xpath('/domain/vcpu')[0].text
 
-    def __getdom_disks(self,dEdit):
-        return True
+    def __getdom_disks(self,dElt):
+        if self.name == 'Domain-0':
+            return False
+        disk_dev = dElt.xpath('/domain/devices/disk/source')[0].attrib['dev']
+        disk = dElt.xpath('/domain/devices/disk/target')[0].attrib['dev']
+        return disk + ':' + disk_dev
+
+    def __getdom_mac(self,dElt):
+        if self.name == 'Domain-0':
+            return False
+        return dElt.xpath('/domain/devices/interface/mac')[0].attrib['address']
 
     def __init__(self,domxmlspec):
         dElt = etree.fromstring(domxmlspec)
@@ -37,6 +46,7 @@ class domain():
         self.memory =   self.__getdom_mem(dElt)
         self.vcpu =     self.__getdom_vcpu(dElt)
         self.disks  =   self.__getdom_disks(dElt)
+        self.mac  =     self.__getdom_mac(dElt)
 
     def __repr__(self):
         "Return domain info as string"
@@ -47,6 +57,7 @@ class domain():
                 'uuid': self.uuid,
                 'memory': self.memory,
                 'vcpu': self.vcpu,
+                'mac': self.mac,
                 'disks': self.disks
                 }
         return str(details)
@@ -60,6 +71,7 @@ class domain():
                 'uuid': self.uuid,
                 'memory': self.memory,
                 'vcpu': self.vcpu,
+                'mac': self.mac,
                 'disks': self.disks
                 }
         return details

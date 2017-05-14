@@ -8,6 +8,9 @@ from pprint import pformat as pf
 from dom import *
 from random import randint as ri
 
+# cert path
+certpath = '/home/cv/git/.pki'
+
 # All mac DB - for Xen guests
 macdb = '.mcs_mac_db'
 
@@ -38,7 +41,7 @@ def mcs_gethosts(version,hosts):
             conn = host_conn_hash[h]
         else:
             # connect using SSH for now (make sure to setup keys) - should change to TLS via certs
-            name = 'xen+ssh://' + h + '/'
+            name = 'xen://' + h + '/system?pkipath=' + certpath
             conn = libvirt.open(name=name)
             if conn is None:
                 print('Failed to connect to Xen host:' + name )

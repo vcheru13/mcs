@@ -1,5 +1,5 @@
 {
-    "name": "ubun7",
+    "name": "ubun1",
     "memoryMB": 512,
     "osdiskGB": 16,
     "osimage": "ubuntu-1604",

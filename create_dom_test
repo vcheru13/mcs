@@ -1,6 +1,6 @@
 #!/bin/bash -x
-curl -i http://192.168.56.101:5000/mcs/api/v1.1/hosts
-curl -i http://192.168.56.101:5000/mcs/api/v1.1/hosts/myxen
-curl -i http://192.168.56.101:5000/mcs/api/v1.1/hosts/myxen/domains
-curl -i -H "Content-Type: application/json" http://192.168.56.101:5000/mcs/api/v1.1/hosts/myxen/domains -X POST -d @newdomain.post
-curl -i -H "Content-Type: application/json" http://192.168.56.101:5000/mcs/api/v1.1/hosts/myxen/domains/ubun3 -X PUT -d @cmd.post
+curl -i http://192.168.9.10:5000/mcs/api/v1.1/hosts
+curl -i http://192.168.9.10:5000/mcs/api/v1.1/hosts/cvkvm.lab.local
+curl -i http://192.168.9.10:5000/mcs/api/v1.1/hosts/cvkvm.lab.local/domains
+curl -i -H "Content-Type: application/json" http://192.168.9.10:5000/mcs/api/v1.1/hosts/cvkvm.lab.local/domains -X POST -d @newdomain.post
+curl -i -H "Content-Type: application/json" http://192.168.9.10:5000/mcs/api/v1.1/hosts/cvkvm.lab.local/domains/ubun3 -X PUT -d @cmd.post

@@ -7,41 +7,25 @@ import sys
 from pprint import pformat as pf
 from dom import *
 from random import randint as ri
-
-# cert path
-certpath = '/home/cv/git/.pki'
-
-# All mac DB - for Xen guests
-macdb = '.mcs_mac_db'
-
-# Hash to store xen guest macs
-allmacs = {} 
+# import global configuration
+import config
 
 def readmacdb():
+    'Read MAC addresses from config.MACDB into hash'
     with open(macdb) as mb:
         for l in mb:
             if l:
                 allmacs[l.strip()] = ''
 
-# read macs from db 
-readmacdb()
-
-# Hash to store Xen host connections
-host_conn_hash = {}
-
-#store all xen host/domain info
-# { h: { 'sysinfo': 'sysinfo like uuid', 'domains': 'list of domains/objects' } 
-#  } 
-xen_hosts = {}
 
 def mcs_gethosts(version,hosts):
-    "Get info for all Xen hosts in hosts"
+    'Get info for all Xen hosts in hosts'
     for h in hosts:
         if h in host_conn_hash:
             conn = host_conn_hash[h]
         else:
-            # connect using SSH for now (make sure to setup keys) - should change to TLS via certs
-            name = 'xen://' + h + '/system?pkipath=' + certpath
+            # Connect using TLS Authentication
+            name = 'xen://' + h + '/system?pkipath=' + pkipath
             conn = libvirt.open(name=name)
             if conn is None:
                 print('Failed to connect to Xen host:' + name )
@@ -54,14 +38,14 @@ def mcs_gethosts(version,hosts):
 
 
 def mcs_gethost(version,hname):
-    "Return host info"
+    'Return host info'
     if hname in xen_hosts:
         return jsonp({hname: xen_hosts[hname]['sysinfo']})
     else:
         return jsonp({ 'error': hname + ' not found' })
 
 def mcs_getdomains(version,hname):
-    "Return all domains on host hname"
+    'Return all domains on host hname'
     if hname not in xen_hosts:
         return jsonp({ 'error': hname + ' not found' })
     else:
@@ -69,7 +53,7 @@ def mcs_getdomains(version,hname):
         return jsonp({ hname: domains })
 
 def mcs_getdomain(version,hname,domname):
-    "Return domain info on host hname"
+    'Return domain info on host hname'
     if hname not in xen_hosts:
         return jsonp({ 'error': hname + ' not found' })
     else:
@@ -81,14 +65,14 @@ def mcs_getdomain(version,hname,domname):
 
 
 def update_domain_info(hname,domname):
-    "Update domname state/info on host hanme"
+    'Update domname state/info on host hanme'
     conn = host_conn_hash[hname]
     dom = conn.lookupByName(domname)
     domobj = domain(dom)
     xen_hosts[hname]['dominfo'][domobj.name] = domobj.info()
 
 def populate_domains(hname):
-    "Populate domains in xen_hosts[hname] and return domain names"
+    'Populate domains in xen_hosts[hname] and return domain names'
     conn = host_conn_hash[hname]
     doms = conn.listAllDomains()
     # initialize 'dominfo' - domname,info
@@ -99,7 +83,7 @@ def populate_domains(hname):
     return xen_hosts[hname]['dominfo'].keys()
        
 def mcs_createdomain(version,hname,domjson):
-    "Create a domain, if not already present"
+    'Create a domain, if not already present'
     domname = domjson['name']
     if __is_dom_inuse(hname,domname):
         return jsonp({ 'error': domname + ' already defined on ' + hname })
@@ -110,20 +94,19 @@ def mcs_createdomain(version,hname,domjson):
     return newdomxml
 
 def mcs_updatedomain(version,hname,domname,command):
-    "Update domain with given cmd, args"
+    'Update domain with given cmd, args'
     if __is_dom_inuse(hname,domname):
         return jsonp({ 'Command': command })
     else:
         return jsonp({ 'error': domname + ' not found on '  + hname })
 
-
 def jsonp(s):
-    "Pretty print json"
+    'Pretty print json'
     return str(json.dumps(s,sort_keys=True,separators=(',',': '),indent=4))
     #return '<pre>' + str(json.dumps(s,sort_keys=True,separators=(',',': '),indent=4)) + '</pre>'
 
 def parse_sysinfo(h,sys_info):
-    "Parse sysinfo and store result in xen_hosts"
+    'Parse sysinfo and store result in xen_hosts'
     doc = etree.fromstring(sys_info)
     si = doc.find('system')
     uuid = [ e.text for e in si.getchildren() if e.items() == [('name','uuid')] ] [0]
@@ -131,7 +114,7 @@ def parse_sysinfo(h,sys_info):
     xen_hosts[h] = s_info
 
 def createdomxml(config):
-    "Return domain config in XML format for libvirt"
+    'Return domain config in XML format for libvirt'
     if not __createdisk(config['osdiskGB']):
         return False
     # Build domain XML now
@@ -177,7 +160,7 @@ def __is_dom_inuse(hname,domname):
         return False
 
 def getnextmac():
-    "Generate random macs in range 00:16:3e:xx:xx:xx - used by Xen"
+    'Generate random macs in range 00:16:3e:xx:xx:xx - used by Xen'
     nextmac = '00:16:3e:00:' + hex(ri(0,256)).strip('0x') + ':' + hex(ri(0,256)).strip('0x')
     if nextmac not in allmacs:
         with open(macdb,'a') as mb: # append new mac at the end of file and in hash
@@ -189,7 +172,19 @@ def getnextmac():
         #print 'Found duplicate, re-generating'
         return getnextmac()
 
-# Main
+
+### Main 
+macdb = config.MACDB        # MAC database for guest domains
+pkipath = config.PKIPATH    # PKI Certificates path 
+allmacs = {}                # Hash to store Xen guest MAC's 
+readmacdb()                 # read MAC address from DB into hash
+xen_hosts = {}              # Initialize hash to store all info on Xen hosts and domains
+host_conn_hash = {}         # Hash to store Xen host connection information
+
+# collect/update Xen hosts information on import
+mcs_gethosts('0.1',config.HOSTS)
+
+# Main function
 if __name__ == '__main__':
-    print mcs_gethosts('v1.0',['myxen'])
+    pass
 

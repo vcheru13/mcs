@@ -7,12 +7,6 @@ from flask import Flask, request,redirect, url_for, abort, make_response,jsonify
 # all libvirt related stuff here
 from libvirt_mcs import *
 
-# list of hosts to manage ,,, read from a db?
-hosts = ['cvkvm.lab.local']
-
-# populate hosts first
-mcs_gethosts('0.1',hosts)
-
 app  = Flask(__name__)
 
 # Get list of Xen hosts

@@ -68,7 +68,7 @@ def update_domain_info(hname,domname):
     'Update domname state/info on host hanme'
     conn = host_conn_hash[hname]
     dom = conn.lookupByName(domname)
-    domobj = domain(dom)
+    domobj = Domain(dom)
     xen_hosts[hname]['dominfo'][domobj.name] = domobj.info()
 
 def populate_domains(hname):
@@ -78,7 +78,7 @@ def populate_domains(hname):
     # initialize 'dominfo' - domname,info
     xen_hosts[hname]['dominfo'] = {}
     for dom in doms:
-        domobj = domain(dom)
+        domobj = Domain(dom)
         xen_hosts[hname]['dominfo'][domobj.name] = domobj.info()
     return xen_hosts[hname]['dominfo'].keys()
        

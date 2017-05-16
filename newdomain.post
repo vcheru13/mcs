@@ -1,8 +1,0 @@
-{
-    "name": "ubun1",
-    "memoryMB": 1024,
-    "osdiskGB": 3,
-    "sourcevolume": "ubuntu1604.img",
-    "vcpu": 1,
-    "pool": "xenvg"
-}

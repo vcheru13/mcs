@@ -60,7 +60,7 @@ class Domain():
                 u'vcpu': 2, 
                 u'osdiskGB': 16, 
                 u'name': u'ubun2', 
-                u'osimage': u'ubuntu-1604',
+                u'sourcevolume': u'ubuntu-1604',
                 u'pool': u'xenvg'
             }
             '''
@@ -133,8 +133,8 @@ class Domain():
     def __setdom_metadata(self,dominfo):
         # metadata for the domain
         metaElt = etree.SubElement(self.Et,'metadata')
-        imageElt = etree.SubElement(metaElt,'osimage')
-        imageElt.text = dominfo['osimage']
+        imageElt = etree.SubElement(metaElt,'sourcevolume')
+        imageElt.text = dominfo['sourcevolume']
 
     def info(self):
         'Return domain info as hash'
@@ -179,3 +179,13 @@ def getnextmac():
         return getnextmac()
 
 
+def createVolXML(volname,volsizeGB):
+    'Return XML spec for volume'
+    volroot = etree.Element('volume',attrib={'type': 'block'})
+    nmElt = etree.SubElement(volroot, 'name')
+    nmElt.text = volname
+    capElt = etree.SubElement(volroot, 'capacity', attrib= { 'unit': 'G'})
+    capElt.text = str(volsizeGB)
+    alcElt = etree.SubElement(volroot, 'allocation', attrib= { 'unit': 'G'})
+    alcElt.text = str(volsizeGB)
+    return etree.tostring(volroot)

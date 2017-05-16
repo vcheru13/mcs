@@ -1,7 +1,8 @@
 {
-    "name": "ubun1",
+    "name": "ubun3",
     "memoryMB": 512,
-    "osdiskGB": 16,
-    "osimage": "ubuntu-1604",
-    "vcpu": 1
+    "osdiskGB": 1,
+    "sourcevolume": "ubuntu1604.img",
+    "vcpu": 1,
+    "pool": "xenvg"
 }

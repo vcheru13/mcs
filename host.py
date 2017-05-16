@@ -2,7 +2,7 @@
 #
 # Contain Xenhost class
 
-from dom import Domain
+from dom import Domain,createVolXML
 
 class Xenhost():
     '''
@@ -19,16 +19,24 @@ class Xenhost():
         self.networks = self.conn.listNetworks()
         
         
+    def detailedinfo(self):
+        'Return detailed host info'
+        details = { 
+                   'name': self.name,
+                   'freeMemMB': self.freeMem,
+                   'maxCpusPerGuest': self.maxGuestCpus,
+                   'domains': self.domains,
+                   'storagePools': self.storage_pools
+                   }
+        return details
+    
     def info(self):
         'Return host info'
         details = { 
                    'name': self.name,
-                   'freeMem': self.freeMem,
-                   'maxCpusPerGuest': self.maxGuestCpus,
-                   'domains': str(self.domains),
-                   'storagePools': str(self.storage_pools)
+                   'freeMemMB': self.freeMem,
+                   'maxCpusPerGuest': self.maxGuestCpus
                    }
-        
         return details
     
     
@@ -37,33 +45,51 @@ class Xenhost():
         
     def updatedomain(self,dname):
         dom = Domain(self.conn.lookupByName(dname))
-        self.domains[dom.name] = dom.info()
+        dominfo = dom.info()
+        self.domains[dom.name] = dominfo
+        return dominfo 
     
     def definedomain(self,domjson):
         dname = domjson['name']
         pool = domjson['pool']
-        dommem = int(domjson['memoryMB'] * 1024)
+        dommem = int(domjson['memoryMB'])
         
         if dname in self.domains.keys():
-            print 'error: domain ' + dname + ' already defined'
-            return
-        
+            return 'error: domain ' + dname + ' already defined'
+                    
         if pool not in self.storage_pools.keys():
-            print 'error: pool ' + pool + ' not present on host ' + self.name
-            return
+            return 'error: pool ' + pool + ' not present on host ' + self.name
+                    
+        if dommem > self.getFreeMem():
+            return 'error: requested memory not available on host ' + self.name
+    
+        srcvol = domjson['sourcevolume']
+        if srcvol not in self.storage_pools[pool]:
+            return 'error: source volume ' + volname + ' not present in pool ' + pool
+                
+        volname = dname.lower() + '-vol0'
+        if volname in self.storage_pools[pool]:
+            return 'error: volume ' + volname + ' already present in pool ' + pool
         
-        if mem > self.getFreeMem():
-            print 'error: requested memory not available on host ' + self.name
-            return
-        # all good, so define Domain
+        # all good, so create volume on pool and define Domain
+        volsize = domjson['osdiskGB']
+        newvolxml = createVolXML(volname,volsize)         
+        
+        # get pool/source volume objects
+        poolobj =  self.conn.storagePoolLookupByName(pool)
+        srcvolobj = poolobj.storageVolLookupByName(srcvol)
+        
+        #clone vol - slow process atm
+        newvol = poolobj.createXMLFrom(newvolxml,srcvolobj)
+        
         newdom = Domain(domjson)
         self.conn.defineXML(newdom.xmlEt)
-        self.updatedomain(dname)
+        return self.updatedomain(dname)
     
-    def startdomain(self):
+    def startdomain(self,dname):
         pass
     
-    def stopdomain(self):
+    def stopdomain(self,dname):
         pass
     
     def getdomaininfo(self,dname):
@@ -71,7 +97,10 @@ class Xenhost():
         return self.domains[dname]
         
     def getFreeMem(self):
-        return  self.conn.getFreeMemory()   
+        # getFreeMemory() returns bytes, convert them to MB
+        return  self.conn.getFreeMemory()/1024/1024
+    
+            
     
         
         

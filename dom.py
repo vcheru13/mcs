@@ -1,62 +1,57 @@
 # domain related stuff
 from lxml import etree
 
-class domain():
-    """
-    Holds domain info, needs XMLDesc() output as param
-    """
-    def __getdom_name(self,dElt):
-        return dElt.xpath('/domain/name')[0].text
+class Domain():
+    '''
+    Holds domain info
+    '''
+    def __getdom_ostype(self):
+        return self.xmlEt.xpath('/domain/os/type')[0].text
 
-    def __getdom_type(self,dElt):
-        return dElt.xpath('/domain')[0].attrib['type']
+    def __getdom_vcpu(self):
+        return self.xmlEt.xpath('/domain/vcpu')[0].text
 
-    def __getdom_ostype(self,dElt):
-        return dElt.xpath('/domain/os/type')[0].text
-
-    def __getdom_uuid(self,dElt):
-        return dElt.xpath('/domain/uuid')[0].text
-
-    def __getdom_mem(self,dElt):
-        memUnit = dElt.xpath('/domain/memory')[0].attrib['unit']
-        mem = dElt.xpath('/domain/memory')[0].text
-        return mem + memUnit
-
-    def __getdom_vcpu(self,dElt):
-        return dElt.xpath('/domain/vcpu')[0].text
-
-    def __getdom_disks(self,dElt):
+    def __getdom_disks(self):
         if self.name == 'Domain-0':
             return False
-        disk_dev = dElt.xpath('/domain/devices/disk/source')[0].attrib['dev']
-        disk = dElt.xpath('/domain/devices/disk/target')[0].attrib['dev']
+        disk_dev = self.xmlEt.xpath('/domain/devices/disk/source')[0].attrib['dev']
+        disk = self.xmlEt.xpath('/domain/devices/disk/target')[0].attrib['dev']
         return disk + ':' + disk_dev
 
-    def __getdom_mac(self,dElt):
+    def __getdom_mac(self):
         if self.name == 'Domain-0':
             return False
-        return dElt.xpath('/domain/devices/interface/mac')[0].attrib['address']
+        return self.xmlEt.xpath('/domain/devices/interface/mac')[0].attrib['address']
 
-    def updatestate(self):
+    def updatestate(self,dominfo):
         states = { 0: 'shutdown', 1: 'running' }
-        self.state = states[self.dom.isActive()]
+        self.state = states[dominfo.isActive()]
 
-    def __init__(self,dom):
-        self.dom    = dom
-        domxmlspec = self.dom.XMLDesc()
-        dElt = etree.fromstring(domxmlspec)
-        self.name =     self.__getdom_name(dElt)
-        self.type =     self.__getdom_type(dElt)
-        self.ostype =   self.__getdom_ostype(dElt)
-        self.uuid =     self.__getdom_uuid(dElt)
-        self.memory =   self.__getdom_mem(dElt)
-        self.vcpu =     self.__getdom_vcpu(dElt)
-        self.disks  =   self.__getdom_disks(dElt)
-        self.mac  =     self.__getdom_mac(dElt)
-        self.updatestate()
+    def __init__(self,dominfo):
+        '''
+        Create domain object based on 'dominfo' : 
+            - if it's libvirt.virDomain instance, get domain info from there and populate
+            - if it's a JSON object, create a new domain 
+        '''
+        if isinstance(dominfo,libvirt.virDomain):
+            'Gather domain info from object'
+            self.name = dominfo.name()
+            self.type = dominfo.OSType()
+            self.memory = dominfo.maxMemory()
+            self.uuid = dominfo.UUIDString()
+            self.xmlEt = etree.fromstring(dominfo.XMLDesc())
+            self.ostype =   self.__getdom_ostype()
+            self.vcpu =     self.__getdom_vcpu()
+            self.disks  =   self.__getdom_disks()
+            self.mac  =     self.__getdom_mac()
+            self.updatestate(dominfo)
+        elif  isinstance(dominfo,dict):
+            'Create domXML based on json dict'
+            pass
+                   
 
     def __repr__(self):
-        "Return domain info as string"
+        'Return domain info as string'
         details = {
                 'name': self.name,
                 'state': self.state,
@@ -71,7 +66,7 @@ class domain():
         return str(details)
 
     def info(self):
-        "Return domain info as hash"
+        'Return domain info as hash'
         details = {
                 'name': self.name,
                 'state': self.state,

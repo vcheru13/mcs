@@ -18,9 +18,9 @@ def readmacdb():
                 allmacs[l.strip()] = ''
 
 
-def mcs_gethosts(version,hosts):
+def mcs_gethosts(version):
     'Get info for all Xen hosts in hosts'
-    for h in hosts:
+    for h in config.HOSTS:
         if h in host_conn_hash:
             conn = host_conn_hash[h]
         else:
@@ -33,9 +33,15 @@ def mcs_gethosts(version,hosts):
             else:
                 # update connection cache
                 host_conn_hash[h] = conn
-        parse_sysinfo(h,conn.getSysinfo())
+        parse_sysinfo(h,conn)
     return jsonp(xen_hosts)
 
+def parse_sysinfo(h,conn):
+    'Parse sysinfo and store result in xen_hosts'
+    si = etree.fromstring(conn.getSysinfo()).find('system')
+    uuid = [ e.text for e in si.getchildren() if e.items() == [('name','uuid')] ] [0]
+    s_info = { 'sysinfo': { 'uuid': uuid } }
+    xen_hosts[h] = s_info
 
 def mcs_gethost(version,hname):
     'Return host info'
@@ -104,14 +110,6 @@ def jsonp(s):
     'Pretty print json'
     return str(json.dumps(s,sort_keys=True,separators=(',',': '),indent=4))
     #return '<pre>' + str(json.dumps(s,sort_keys=True,separators=(',',': '),indent=4)) + '</pre>'
-
-def parse_sysinfo(h,sys_info):
-    'Parse sysinfo and store result in xen_hosts'
-    doc = etree.fromstring(sys_info)
-    si = doc.find('system')
-    uuid = [ e.text for e in si.getchildren() if e.items() == [('name','uuid')] ] [0]
-    s_info = { 'sysinfo': { 'uuid': uuid } }
-    xen_hosts[h] = s_info
 
 def createdomxml(config):
     'Return domain config in XML format for libvirt'
@@ -182,9 +180,9 @@ xen_hosts = {}              # Initialize hash to store all info on Xen hosts and
 host_conn_hash = {}         # Hash to store Xen host connection information
 
 # collect/update Xen hosts information on import
-mcs_gethosts('0.1',config.HOSTS)
+mcs_gethosts('0.1')
 
 # Main function
 if __name__ == '__main__':
-    pass
+    print xen_hosts
 

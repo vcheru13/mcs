@@ -1,1 +1,6 @@
 *.pyc
+.mcs_mac_db
+create_dom_test
+newdomain.post
+cmd.post
+

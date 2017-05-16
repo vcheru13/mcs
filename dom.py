@@ -4,9 +4,7 @@ import libvirt
 import config
 from random import randint as ri
 
-macdb = config.MACDB        # MAC database for guest domains
-allmacs = {}                # Hash to store Xen guest MAC's
-
+# Domain class
 class Domain():
     '''
     Holds domain info
@@ -156,7 +154,10 @@ class Domain():
                 }
         
         return details
-    
+# class ends here
+
+macdb = config.MACDB        # MAC database for guest domains
+allmacs = {}                # Hash to store Xen guest MAC's
 
 def readmacdb():
     'Read MAC addresses from config.MACDB into hash'
@@ -166,7 +167,7 @@ def readmacdb():
                 allmacs[l.strip()] = ''
 
 def getnextmac():
-    'Generate random macs in range 00:16:3e:xx:xx:xx - used by Xen'
+    'Generate random macs in range 00:16:3e:00:xx:xx - used by Xen'
     nextmac = '00:16:3e:00:' + hex(ri(0,256)).strip('0x') + ':' + hex(ri(0,256)).strip('0x')
     if nextmac not in allmacs:
         with open(macdb,'a') as mb: # append new mac at the end of file and in hash

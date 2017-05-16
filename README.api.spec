@@ -17,13 +17,15 @@ Get domain details:
 Create domain on host:
     POST /mcs/api/v0.1/hosts/<host-name>/domains             # create a new domain on host
 curl -i -H "Content-Type: application/json" http://192.168.56.101:5000/mcs/api/v1.1/hosts/myxen/domains -X POST -d @newdomain.post
-    {
-    "name": "ubun8",
-    "memoryMB": 512,
-    "osdiskGB": 16,
-    "osimage": "ubuntu-1604",
-    "vcpu": 1
-    }
+	{
+    	"name": "ubun1",
+    	"memoryMB": 1024,
+    	"osdiskGB": 3,
+    	"sourcevolume": "ubuntu1604.img",
+    	"vcpu": 1,
+    	"pool": "xenvg"
+	}
+
 
 Update a domain on host: 
     PUT /mcs/api/v0.1/hosts/<host-name>/domains/domname             # update domain on host
@@ -35,7 +37,7 @@ curl -i -H "Content-Type: application/json" http://192.168.56.101:5000/mcs/api/v
 
 Delete a domain on host:
     DELETE /mcs/api/v0.1/hosts/<host-name>/domains/domname             # delete a domain on host
-curl -i -H "Content-Type: application/json" http://192.168.56.101:5000/mcs/api/v1.1/hosts/myxen/domains/ubun8 -X DELETE -d @newdomain.post
+curl -i -H "Content-Type: application/json" http://192.168.56.101:5000/mcs/api/v1.1/hosts/myxen/domains/ubun8 -X DELETE
 
 
 

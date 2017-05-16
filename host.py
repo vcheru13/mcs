@@ -1,9 +1,7 @@
 #!/usr/bin/python
-#
-# Contain Xenhost class
-
 from dom import Domain,createVolXML
 
+# Xenhost class 
 class Xenhost():
     '''
     class to hold information for a Xen host and it's domains, storage and networks
@@ -80,6 +78,7 @@ class Xenhost():
         srcvolobj = poolobj.storageVolLookupByName(srcvol)
         
         #clone vol - slow process atm
+        # TODO: check volsize => has to be > srcvol size
         newvol = poolobj.createXMLFrom(newvolxml,srcvolobj)
         
         newdom = Domain(domjson)
@@ -87,14 +86,17 @@ class Xenhost():
         return self.updatedomain(dname)
     
     def startdomain(self,dname):
-        pass
+        return self.getdomainobj(dname).create()
     
     def stopdomain(self,dname):
-        pass
-    
+        return self.getdomainobj(dname).destroy()
+       
     def getdomaininfo(self,dname):
         self.updatedomain(dname)
         return self.domains[dname]
+    
+    def getdomainobj(self,dname):
+        return self.conn.lookupByName(dname)
         
     def getFreeMem(self):
         # getFreeMemory() returns bytes, convert them to MB

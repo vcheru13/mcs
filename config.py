@@ -13,6 +13,3 @@ MACDB = '.mcs_mac_db'
 
 # PKI cert location dir
 PKIPATH = '/var/tmp/cv/git/.pki'
-
-
-

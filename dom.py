@@ -1,7 +1,7 @@
 # domain related stuff
 from lxml import etree
 
-class Domain():
+class domain():
     """
     Holds domain info, needs XMLDesc() output as param
     """

@@ -3,8 +3,6 @@
 # MCS 
 #
 from flask import Flask, request,redirect, url_for, abort, make_response,jsonify
-
-# all libvirt related stuff here
 from libvirt_mcs import *
 
 app  = Flask(__name__)
@@ -12,7 +10,7 @@ app  = Flask(__name__)
 # Get list of Xen hosts
 @app.route("/mcs/api/<string:version>/hosts")
 def gethosts(version):
-    return mcs_gethosts(version,hosts)
+    return mcs_gethosts(version)
 
 # Get info of a specific Xen host
 @app.route("/mcs/api/<string:version>/hosts/<string:hname>")
@@ -55,5 +53,5 @@ def not_allowed(error):
     return make_response(jsonify({'error': 'Method not allowed'}),405)
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0',debug=True)
+    app.run(host='0.0.0.0',port=10080,debug=True)
 

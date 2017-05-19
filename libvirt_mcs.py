@@ -90,7 +90,8 @@ def mcs_getinstancemeta(remoteip):
                 if xen_hosts[h].domains[dom]['mac'] == inst_mac:
                     # add ip into domain info
                     print 'Found MAC ' +  xen_hosts[h].domains[dom]['mac'] + ' for IP:' + remoteip
-                    xen_hosts[h].domains[dom]['ip'] = remoteip
+                    xen_hosts[h].domains[dom] = xen_hosts[h].updatedomain(dom,remoteip)
+                    print xen_hosts[h].domains[dom]
                     # Return meta data
                     inst_meta = { 
                                 "uuid": xen_hosts[h].domains[dom]['uuid'],

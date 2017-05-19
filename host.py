@@ -41,8 +41,10 @@ class Xenhost():
     def listdomains(self):
             return self.domains.keys()
         
-    def updatedomain(self,dname):
+    def updatedomain(self,dname,domip=None):
         dom = Domain(self.conn.lookupByName(dname))
+        if domip:
+            dom.updateip(domip)
         dominfo = dom.info()
         self.domains[dom.name] = dominfo
         return dominfo 
@@ -92,7 +94,10 @@ class Xenhost():
         return self.getdomainobj(dname).destroy()
        
     def getdomaininfo(self,dname):
-        self.updatedomain(dname)
+        if self.domains[dname]['ip']:
+            self.updatedomain(dname,self.domains[dname]['ip'])
+        else:
+            self.updatedomain(dname)
         return self.domains[dname]
     
     def getdomainobj(self,dname):

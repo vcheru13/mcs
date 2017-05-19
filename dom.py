@@ -31,6 +31,9 @@ class Domain():
         states = { 0: 'shutdown', 1: 'running' }
         self.state = states[dominfo.isActive()]
 
+    def updateip(self,instip):
+            self.ip = instip
+            
     def __init__(self,dominfo):
         '''
         Create domain object based on 'dominfo' : 
@@ -49,6 +52,7 @@ class Domain():
             self.vcpu =     self.__getdom_vcpu()
             self.disks  =   self.__getdom_disks()
             self.mac  =     self.__getdom_mac()
+            self.ip   =     ''      # set later, once domain get's an ip
             self.updatestate(dominfo)
         elif  isinstance(dominfo,dict):
             '''
@@ -71,6 +75,7 @@ class Domain():
             self.vcpu   = self.__setdom_vcpu(dominfo)
             self.disks  = self.__setdom_disks(dominfo)
             self.mac    = self.__setdom_mac(dominfo)
+            self.ip   =     ''      # set later, once domain get's an ip
             self.__setdom_metadata(dominfo)
             self.state  = 0
             self.xmlEt  = etree.tostring(self.Et,pretty_print=True)
@@ -150,6 +155,7 @@ class Domain():
                 'memory': self.memory,
                 'vcpu': self.vcpu,
                 'mac': self.mac,
+                'ip': self.ip,
                 'disks': self.disks
                 }
         

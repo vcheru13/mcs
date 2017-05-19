@@ -5,6 +5,7 @@ from lxml import etree
 import json
 import sys
 from random import randint as ri
+from subprocess import Popen,PIPE
 
 # Custom host/domain specifics
 from host import Xenhost
@@ -77,11 +78,54 @@ def isValidDomain(hname,domname):
 def jsonp(s):
     'Pretty print json'
     return json.dumps(s,sort_keys=True,separators=(',',': '),indent=4)
-    
+
+
+## Metadata 
+def mcs_getinstancemeta(remoteip):
+    inst_mac = getmacforip(remoteip)
+    if inst_mac:
+        # if IP found, update in domain first and retrive it's meta-data
+        for h in xen_hosts:      # 
+            for dom in xen_hosts[h].listdomains():
+                if xen_hosts[h].domains[dom]['mac'] == inst_mac:
+                    # add ip into domain info
+                    print 'Found MAC ' +  xen_hosts[h].domains[dom]['mac'] + ' for IP:' + remoteip
+                    xen_hosts[h].domains[dom]['ip'] = remoteip
+                    # Return meta data
+                    inst_meta = { 
+                                "uuid": xen_hosts[h].domains[dom]['uuid'],
+                                "name": xen_hosts[h].domains[dom]['name'],
+                                "hostname": xen_hosts[h].domains[dom]['name'] + '.lab.local',
+                                "public_keys": {
+                                    "mykey": 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC7+iDRImD7iezhz27xI4QYEjVhY2aKfjdQL1SxcIpn0TbZwWSTKIJb/gXavETQlASby4dxVOcFQKlwNHT2ZO5sjynJ8mdEuWsLTHxtFs3CFUUy0mp+pScLfpzg9VNj72uszFdbQgWxwFYn34zyavqqGkguPVEihx1B3T45678PUvbYKPijij40+v8rzQMx31AWoZZSsHPo/H1Jf3QppfrQt2J0vsF4tb7EMOKSyL5aQK4q6WA7KSMJKWOyA5o9FQ2khHDwVUgIMXxmuWzH4izcLd2v7mvzqaUYDbrFzQXR4qdUE6PiIt/e8mlMZQU2JUC4yHePqKw1MTlcCW0WtKkAv4U4Do7f8YLXivA7TMtooCsRDCsA/ID8oJJ6isAejgqucGp+tE3quxFN7tieRMKwIwfqIvmoObOvbnkqw5T7zBIspxdmTicfWejlvl+5JmLJiWimN+UiA8XWiAQkQ9WZ0Aw9P+EXj7oHL3atWdbj9/4cDf4HYZO6RVlC/nK292GVo+DpJt2w/AZ44NjSk+HOGGLlcBWGOSsVJnt+ToJUEdIRQjDQogAEqJC9qdPuf1y+iC4wdwsCqlVUBAWwyAYIKpbiGD1hLo40LdiFl1tXHJCBZiqCzJP1kXcnsOXk+6mbaTiBZm+dHIjvXarXjghrbjp8UnHifbj+cruNpuaeaQ==' }
+                                }
+                    return inst_meta
+        return None
+
+# Userdata
+def mcs_getinstanceuser():
+    return ""
+
+# Fix 0's in MAC address
+def fixmac(mac):
+        'fix mac so, all 6 octets are 2 nibbles - esp 0'
+        return ':'.join(map(lambda x: '0' + x if int('0x' + x,16) <= 16 else x , mac.split(':')))
+
+# get MAC of metadata requester
+def getmacforip(remoteip):
+    'Return MAC of ip based on arp cache'
+    arp_out = Popen(['arp','-an'],stdout=PIPE).communicate()[0].splitlines()
+    knownmacs = { l.split()[1].lstrip('(').rstrip(')'):fixmac(l.split()[3]) for l in arp_out if not 'incomplete' in l }
+    if remoteip in knownmacs.keys():
+        return knownmacs[remoteip]
+    else:
+        return None
+
 
 ### Main 
 pkipath = config.PKIPATH    # PKI Certificates path 
 xen_hosts = {}              # Initialize hash to store all info on Xen hosts and domains
+knownmacs = {}              # arp cache on host where this program is running
 
 # collect/update Xen hosts information on import
 mcs_gethosts('0.0')

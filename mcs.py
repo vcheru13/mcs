@@ -1,57 +1,55 @@
-#!/usr/bin/env python
-#
-# MCS 
-#
-from flask import Flask, request,redirect, url_for, abort, make_response,jsonify
-from libvirt_mcs import *
+#!/usr/bin/python
+# mcs host
+# mcs host --info <hname>
+# mcs domain --host <hanme>
+# mcs domain --host <hanme> --domu <dname>
+# mcs domain --cmd start --host <hanme> --dom <dname>
+# mcs domain --cmd stop  --host <hanme> --dom <dname>
+# mcs domain --cmd create --host <hanme> --dom <dname> --opts={key1=value1,key2=value2...}
+# mcs domain --cmd destroy --host <hanme> --dom <dname>
 
-app  = Flask(__name__)
+import argparse
+import sys
 
-# Get list of Xen hosts
-@app.route("/mcs/api/<string:version>/hosts")
-def gethosts(version):
-    return mcs_gethosts(version)
+usage='''
+ mcs host
+ mcs host --info <hname>
+ mcs domain --host <hanme>
+ mcs domain --host <hanme> --domu <dname>
+ mcs domain --cmd start --host <hanme> --domu <dname>
+ mcs domain --cmd stop  --host <hanme> --domu <dname>
+ mcs domain --cmd create --host <hanme> --opts={key1=value1,key2=value2...}
+ mcs domain --cmd destroy --host <hanme> --domu <dname>
+ ''' 
 
-# Get info of a specific Xen host
-@app.route("/mcs/api/<string:version>/hosts/<string:hname>")
-def gethostbyuuid(version,hname):
-    return mcs_gethost(version,hname)
+parser = argparse.ArgumentParser(usage=usage,add_help=False)
+parser.add_argument('comm',choices=['host','domain'],help=' host|domain')
+parser.add_argument('--info',dest='info',help='host info')
+parser.add_argument('--host',dest='hname',help='hostname')
+parser.add_argument('--domu',dest='dname',help='domain')
+parser.add_argument('--cmd',dest='cmd',choices=['start','stop','create','destroy'],help='cmd to run on domain')
+parser.add_argument('--opts',dest='opts',help='options for domain creation')
+args = parser.parse_args()
 
-# Get list of domains on a specific Xen host
-@app.route("/mcs/api/<string:version>/hosts/<string:hname>/domains",methods=['GET'])
-def getdomains(version,hname):
-    return mcs_getdomains(version,hname)
-
-# Create a domain on a specific Xen host
-@app.route("/mcs/api/<string:version>/hosts/<string:hname>/domains",methods=['POST'])
-def createdomain(version,hname):
-    if not request.json:
-        abort(400)
-    new_domain = mcs_createdomain(version,hname,request.json)
-    return new_domain
-
-# Get info of domain on a specific Xen host
-@app.route("/mcs/api/<string:version>/hosts/<string:hname>/domains/<string:domname>",methods=['GET'])
-def getdomain(version,hname,domname):
-    return mcs_getdomain(version,hname,domname)
-
-# Update domain on a specific Xen host
-@app.route("/mcs/api/<string:version>/hosts/<string:hname>/domains/<string:domname>",methods=['PUT'])
-def updatedomain(version,hname,domname):
-    if not request.json:
-        abort(400)
-    return mcs_updatedomain(version,hname,domname,request.json)
-
-# 404 handler
-@app.errorhandler(404)
-def not_found(error):
-    return make_response(jsonify({'error': 'Not found'}),404)
-
-# 405 handler
-@app.errorhandler(405)
-def not_allowed(error):
-    return make_response(jsonify({'error': 'Method not allowed'}),405)
-
-if __name__ == "__main__":
-    app.run(host='0.0.0.0',port=10080,debug=True)
-
+if args.comm == 'host':
+    if args.info:
+        print 'Parsing info of host: ', args.info
+    else:
+        print 'Print all host list'
+else:
+    if not args.hname:
+        print 'hostname required' + usage
+        sys.exit(1)
+    if not args.dname:
+        print 'domain required' + usage
+        sys.exit(1)
+    if not args.cmd:
+        print 'printing domain: ' + args.dname + ' info on host: ' + args.hname
+    else: 
+        if args.cmd == 'create' and not args.opts:
+            print 'create command requires --opts' + usage
+            sys.exit(1)
+        else:
+            print 'Running command: ' + args.cmd + ' for domain: ' + args.dname + ' on host: ' + args.hname 
+            if args.opts:
+                print 'Opts: '  + args.opts

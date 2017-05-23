@@ -10,6 +10,34 @@
 
 import argparse
 import sys
+import requests
+
+mcs_server_url = 'http://127.0.0.1:10080/'
+
+
+def gethost(hname):
+    print 'Parsing info of host: ', hname
+
+def getallhosts():
+    print 'All hosts info'
+
+def getdomains(hname):
+    print 'All domains on: ', hname
+
+def getdominfo(hname,dname):
+    print 'Domain info ', dname, ' on: ', hname
+
+def domstart(hname,dname):
+    print 'Starting domain ', dname, ' on: ', hname
+                             
+def domstop(hname,dname):
+    print 'Stoping domain ', dname, ' on: ', hname
+
+def domcreate(hname,dname,opts):
+    print 'Creating domain ', dname, ' on: ', hname
+                         
+def domdestroy(hname,dname):
+    print 'Destroying domain ', dname, ' on: ', hname
 
 usage='''
  mcs host
@@ -33,9 +61,9 @@ args = parser.parse_args()
 
 if args.comm == 'host':
     if args.info:
-        print 'Parsing info of host: ', args.info
+        gethost(args.info)
     else:
-        print 'Print all host list'
+        getallhosts()
 else:
     if not args.hname:
         print 'hostname required' + usage
@@ -44,12 +72,17 @@ else:
         print 'domain required' + usage
         sys.exit(1)
     if not args.cmd:
-        print 'printing domain: ' + args.dname + ' info on host: ' + args.hname
+        getdominfo(args.hname,args.dname)
     else: 
         if args.cmd == 'create' and not args.opts:
             print 'create command requires --opts' + usage
             sys.exit(1)
         else:
-            print 'Running command: ' + args.cmd + ' for domain: ' + args.dname + ' on host: ' + args.hname 
-            if args.opts:
-                print 'Opts: '  + args.opts
+            #print 'Running command: ' + args.cmd + ' for domain: ' + args.dname + ' on host: ' + args.hname 
+            #if args.opts:
+            #    print 'Opts: '  + args.opts
+            domcmd_funcs = { 'start': domstart(args.hname,args.dname),
+                             'stop': domstop(args.hname,args.dname),
+                             'create': domcreate(args.hname,args.dname,args.opts),
+                             'destroy': domdestroy(args.hname,args.dname) }
+            domcmd_funcs[args.cmd]

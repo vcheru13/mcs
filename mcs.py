@@ -20,7 +20,6 @@ def getmcsapi(mcsurl):
     if r.status_code == 200:
         if isinstance(r.json(),dict):
             for k in r.json():
-                print k,'==>',
                 print json.dumps(r.json().get(k),sort_keys=True,indent=4)
         else:
             for k in r.json():

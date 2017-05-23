@@ -15,7 +15,7 @@ import json
 
 mcs_server_url = 'http://127.0.0.1:10080/mcs/api/v0.1'
 
-def getmcsapi(mcsurl):
+def getmcs(mcsurl):
     r = requests.get(mcsurl)
     if r.status_code == 200:
         if isinstance(r.json(),dict):
@@ -27,14 +27,14 @@ def getmcsapi(mcsurl):
     else:
         print 'ERROR: unable to GET ', mcsurl
 
-def putmcsapi(mcsurl,payload):
+def putmcs(mcsurl,payload):
     r = requests.put(mcsurl,json=payload)
     if r.status_code == 200:
         print json.dumps(r.json(),sort_keys=True,indent=4)
     else:
         print 'ERROR: unable to PUT ', mcsurl
 
-def postmcsapi(mcsurl,payload):
+def postmcs(mcsurl,payload):
     r = requests.post(mcsurl,json=payload)
     if r.status_code == 200:
         print json.dumps(r.json(),sort_keys=True,indent=4)
@@ -43,33 +43,34 @@ def postmcsapi(mcsurl,payload):
 
 def gethost(hname):
     print 'Parsing info of host: ', hname
-    getmcsapi(mcs_server_url + '/hosts/' + hname )
+    getmcs(mcs_server_url + '/hosts/' + hname )
 
 def getallhosts():
     print 'All hosts info'
-    getmcsapi(mcs_server_url + '/hosts')
+    getmcs(mcs_server_url + '/hosts')
 
 def getdomains(hname):
     print 'All domains on: ', hname
-    getmcsapi(mcs_server_url + '/hosts/' + hname + '/domains')
+    getmcs(mcs_server_url + '/hosts/' + hname + '/domains')
     sys.exit()
 
 def getdominfo(hname,dname):
     print 'Domain info ', dname, ' on: ', hname
-    getmcsapi(mcs_server_url + '/hosts/' + hname + '/domains/' + dname)
+    getmcs(mcs_server_url + '/hosts/' + hname + '/domains/' + dname)
 
 def domstart(hname,dname):
     print 'Starting domain ', dname, ' on: ', hname
     payload = { "cmd": "start", "args": None }
-    putmcsapi(mcs_server_url + '/hosts/' + hname + '/domains/' + dname,payload)
+    putmcs(mcs_server_url + '/hosts/' + hname + '/domains/' + dname,payload)
                              
 def domstop(hname,dname):
     print 'Stoping domain ', dname, ' on: ', hname
     payload = { "cmd": "stop", "args": None }
-    putmcsapi(mcs_server_url + '/hosts/' + hname + '/domains/' + dname,payload)
+    putmcs(mcs_server_url + '/hosts/' + hname + '/domains/' + dname,payload)
 
 def domcreate(hname,dname,opts):
     print 'Creating domain ', dname, ' on: ', hname
+    print type(opts), opts
                          
 def domdestroy(hname,dname):
     print 'Destroying domain ', dname, ' on: ', hname

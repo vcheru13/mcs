@@ -68,9 +68,43 @@ def domstop(hname,dname):
     payload = { "cmd": "stop", "args": None }
     putmcs(mcs_server_url + '/hosts/' + hname + '/domains/' + dname,payload)
 
+def validate_options(opthash):
+    """ 
+    Check for below known_keys, if not found, default and if unknown, bail out
+    """
+    known_keys = [ 'name', 'vcpu', 'memoryMB', 'pool', 'osdiskGB', 'sourcevolume' ]
+    known_defaults = { 'vcpu': 1, 'memoryMB': 1024, 'pool': 'xenvg', 'osdiskGB': 3, 'sourcevolume': 'src_ubuntu1604' }
+
+    for k in opthash:
+        if k not in known_keys:
+            print 'Unknown option found:' + k
+            print 'Valid options are : ' + str(known_keys)
+            sys.exit(1)
+
+    # name must be supplied
+    if 'name' not in opthash:
+        print 'name must be set'
+        sys.exit(1)
+
+    # Build new opts, adding any missing defaults
+    newopts = {}
+    for k in known_keys:
+        if k in opthash:
+            newopts[k] = opthash[k]
+        else:
+            newopts[k] = known_defaults[k]
+    newopts['vcpu'] = int(newopts['vcpu'])
+    return newopts
+                
 def domcreate(hname,dname,opts):
     print 'Creating domain ', dname, ' on: ', hname
-    print type(opts), opts
+    opts = opts.rstrip('}')
+    opts = opts.lstrip('{')
+    opthash = { x.split('=')[0]:x.split('=')[1] for x in opts.split(',') }
+    fixed_opts = validate_options(opthash)
+    # All options good, process now
+    print 'Using opts :' + str(fixed_opts)
+    postmcs(mcs_server_url + '/hosts/' + hname + '/domains',fixed_opts)
                          
 def domdestroy(hname,dname):
     print 'Destroying domain ', dname, ' on: ', hname

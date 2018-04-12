@@ -37,4 +37,6 @@ Delete a domain on host:
     DELETE /mcs/api/v0.1/hosts/<host-name>/domains/domname             # delete a domain on host
 curl -i -H "Content-Type: application/json" http://192.168.56.101:5000/mcs/api/v1.1/hosts/myxen/domains/ubun8 -X DELETE -d @newdomain.post
 
-
+## squash this - 1
+## squash this - 2
+## pick this - 3
